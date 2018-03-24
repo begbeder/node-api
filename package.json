@@ -13,5 +13,8 @@
     "db"
   ],
   "author": "Begbeder",
-  "license": ""
+  "license": "",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
 }
