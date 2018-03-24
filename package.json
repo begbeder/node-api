@@ -1,0 +1,17 @@
+{
+  "name": "node-api",
+  "version": "1.0.0",
+  "description": "first node api",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js"
+  },
+  "keywords": [
+    "node",
+    "api",
+    "mongo",
+    "db"
+  ],
+  "author": "Begbeder",
+  "license": ""
+}
