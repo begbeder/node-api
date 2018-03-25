@@ -1,13 +1,12 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const MongoClient = require('mongodb').MongoClient
+
 const ObjectID = require('mongodb').ObjectID
+const db = require('./db')
 
 const config = require('./config')
 
 const app = express()
-
-let db = null
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -33,7 +32,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/artists', (req, res) => {
-    db.collection('artists').find().toArray((err, docs) => {
+    db.get().collection('artists').find().toArray((err, docs) => {
         if (err) {
             console.log(err)
             return res.sendStatus(500)
@@ -45,7 +44,7 @@ app.get('/artists', (req, res) => {
 
 app.get('/artists/:id', (req, res) => {
     const artist = artists.find(artist => artist.id === Number(req.params.id))
-    db.collection('artists').findOne({ _id: ObjectID(req.params.id) }, (err, doc) => {
+    db.get().collection('artists').findOne({ _id: ObjectID(req.params.id) }, (err, doc) => {
         if (err) {
             console.log(err)
             return res.sendStatus(500)
@@ -60,7 +59,7 @@ app.post('/artists', (req, res) => {
         name: req.body.name
     }
 
-    db.collection('artists').insert(artist, (err, result) => {
+    db.get().collection('artists').insert(artist, (err, result) => {
         if (err) {
             console.log(err)
             return res.sendStatus(500)
@@ -71,25 +70,38 @@ app.post('/artists', (req, res) => {
 })
 
 app.put('/artists/:id', (req, res) => {
-    const artist = artists.find(artist => artist.id === Number(req.params.id))
-    
-    artist.name = req.body.name
+    db.get().collection('artists').update(
+        { _id: ObjectID(req.params.id) },
+        { name: req.body.name },
+        (err, result) => {
+            if (err) {
+                console.log(err)
+                return res.sendStatus(500)
+            }
 
-    res.sendStatus(200)
+            res.sendStatus(200)
+        }
+    )
 })
 
 app.delete('/artists/:id', (req, res) => {
-    artists = artists.filter(artist => artist.id !== Number(req.params.id))
+    db.get().collection('artists').deleteOne(
+        { _id: ObjectID(req.params.id) },
+        (err, result) => {
+            if (err) {
+                console.log(err)
+                return res.sendStatus(500)
+            }
 
-    res.sendStatus(200)
+            res.sendStatus(200)
+        }
+    )
 })
 
-MongoClient.connect('mongodb://localhost/myapi', (err, database) => {
+db.connect('mongodb://localhost/myapi', (err) => {
     if (err) {
         return console.log(err) 
     }
-
-    db = database.db('myapi');
 
     app.listen(config.port, () => {
         console.log('api started')
