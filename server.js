@@ -1,9 +1,13 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const MongoClient = require('mongodb').MongoClient
+const ObjectID = require('mongodb').ObjectID
 
 const config = require('./config')
 
 const app = express()
+
+let db = null
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -29,24 +33,41 @@ app.get('/', (req, res) => {
 })
 
 app.get('/artists', (req, res) => {
-    res.send(artists)
+    db.collection('artists').find().toArray((err, docs) => {
+        if (err) {
+            console.log(err)
+            return res.sendStatus(500)
+        }
+
+        res.send(docs)
+    })
 })
 
 app.get('/artists/:id', (req, res) => {
     const artist = artists.find(artist => artist.id === Number(req.params.id))
-    
-    res.send(artist)
+    db.collection('artists').findOne({ _id: ObjectID(req.params.id) }, (err, doc) => {
+        if (err) {
+            console.log(err)
+            return res.sendStatus(500)
+        }
+
+        res.send(doc)
+    })
 })
 
 app.post('/artists', (req, res) => {
     const artist = {
-        id: Date.now(),
         name: req.body.name
     }
 
-    artists.push(artist)
+    db.collection('artists').insert(artist, (err, result) => {
+        if (err) {
+            console.log(err)
+            return res.sendStatus(500)
+        }
 
-    res.send(artist)
+        res.send(artist)
+    })
 })
 
 app.put('/artists/:id', (req, res) => {
@@ -63,6 +84,14 @@ app.delete('/artists/:id', (req, res) => {
     res.sendStatus(200)
 })
 
-app.listen(config.port, () => {
-    console.log('api started')
+MongoClient.connect('mongodb://localhost/myapi', (err, database) => {
+    if (err) {
+        return console.log(err) 
+    }
+
+    db = database.db('myapi');
+
+    app.listen(config.port, () => {
+        console.log('api started')
+    })
 })
